@@ -26,7 +26,7 @@ public:
 		server_addr.sin_addr.s_addr = htonl(INADDR_ANY);
 		if(bind(listener, (sockaddr *)&server_addr, sizeof(server_addr)) < 0)
 		{
-			cout << "bind port error";
+			cout << "bind port error!";
 			return 2;
 		}	
 		listen(listener, 1);
