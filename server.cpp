@@ -8,6 +8,7 @@ const int MAX_MSG_LENGTH=2000;
 const int MAX_SOCKETS=10;
 const int LISTEN_PORT=6666;
 
+
 class Connection
 {
 protected:
