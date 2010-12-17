@@ -165,7 +165,6 @@ void work_with_client(int sock,int client_num)
 struct Message parse(unsigned char* input)
 {
 	struct Message* message = new Message;
-	
 	message.protocol_version = *input;
 	input++;
 	message.message_type = char2_to_int(input);
@@ -190,4 +189,4 @@ struct Message parse(unsigned char* input)
 }
 /*
 	input[7] = 0;
-	input[8] = 12; //а вот здесь количество символов из стоки которая ниже попадает в значение первого параметра  */
+	Mreinput[8] = 12; //а вот здесь количество символов из стоки которая ниже попадает в значение первого параметра  */
