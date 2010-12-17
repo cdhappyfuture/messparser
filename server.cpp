@@ -171,7 +171,7 @@ struct Message parse(unsigned char* input)
 	input+=2;
 	message.message_length = char2_to_int(input);
 	input+=2;
-	message.parameter = new Parameter[500];
+	message.parameter = new Parameter[700];
 	unsigned char* ptr_first_param = input;
 	int i=0;
 	while (message.message_length >= input - ptr_first_param)
