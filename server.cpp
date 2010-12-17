@@ -172,7 +172,7 @@ struct Message parse(unsigned char* input)
 	message.message_length = char2_to_int(input);
 	input+=2;
 	message.parameter = new Parameter[500];
-	unsigned char* ptr_first_param = input;
+	unsigned char* ptr_first_param = input;//git test
 	int i=0;
 	while (message.message_length >= input - ptr_first_param)
 	{
