@@ -22,7 +22,7 @@ public:
 	
 	int _listen()
 	{
-		server_addr.sin:_family = AF_INET;
+		server_addr.sin_family = AF_INET;
 		server_addr.sin_port = htons(LISTEN_PORT);
 		server_addr.sin_addr.s_addr = htonl(INADDR_ANY);
 		if(bind(listener, (sockaddr *)&server_addr, sizeof(server_addr)) < 0)
@@ -144,46 +144,34 @@ void work_with_client(int sock,int client_num)
 	strcpy(msg_to_client,"ok\n");
 	while(1)
 	{
-		bytes_read = recv(sock, msg_from_client, sizeof(msg_from_client), 0);
-		if(bytes_read <= 0)
-		{
-			close(sock);
-			break;
-		}
-		if (!strcmp(msg_from_client,"close_connection"))
-		{
-			strcpy(msg_to_client,"close_connection");
-			send(sock, msg_to_client, sizeof(msg_to_client), 0);
-			cout << "client " << client_num << ": connection closed" << endl;
-			close(sock);
-			break;
-		}	
-		cout << "client " << client_num << ":" << msg_from_client << endl;
+		Message* message = new Message;
+		message = parse(sock);
+		strcpy(msg_to_client,"Message delivered");		
 		send(sock, msg_to_client, sizeof(msg_to_client), 0);
 	}
 }
 
-struct Message parse(unsigned char* input)
+struct Message* parse(int input)
 {
 	struct Message* message = new Message;
-	message.protocol_version = *input;
-	input++;
-	message.message_type = char2_to_int(input);
-	input+=2;
-	message.message_length = char2_to_int(input);
-	input+=2;
-	message.parameter = new Parameter[500];
-	unsigned char* ptr_first_param = input;//git test
+	char buf[3];
+	recv(input,buf,1,0);
+	message->protocol_version = (unsigned int)buf;
+	recv(input,buf,2,0);
+	message->message_type = char2_to_int(buf);
+	recv(input,buf,2,0);
+	message->message_length = char2_to_int(buf);
+	message->parameter = new Parameter[500];
+	unsigned char* ptr_first_param = input;
 	int i=0;
-	while (message.message_length >= input - ptr_first_param)
+	while (message->message_length >= input - ptr_first_param)
 	{
-		message.parameter[i].parameter_type = char2_to_int(input);	
-		input+=2;
-		message.parameter[i].parameter_length = char2_to_int(input);	
-		input+=2;
-		message.parameter[i].parameter_value = new char[message.parameter[i].parameter_length];
-		memcpy(message.parameter[i].parameter_value, input, message.parameter[i].parameter_length);
-		input += message.parameter[i].parameter_length;	
+		recv(input,buf,2,0);
+		message->parameter[i].parameter_type = char2_to_int(buf);	
+		recv(input,buf,2,0);
+		message->parameter[i].parameter_length = char2_to_int(buf);	
+		message->parameter[i].parameter_value = new char[message->parameter[i].parameter_length];
+		recv(input, message->parameter[i].parameter_value, message->parameter[i].parameter_length, 0);
 		i++;
 	}	
 	return message;
