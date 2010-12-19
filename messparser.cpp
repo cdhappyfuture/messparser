@@ -1,100 +1,10 @@
-#include "myheader.h"
-#include <boost/thread.hpp>
-#include <stdint.h>
-#include <vector>
+#include "connection.h"
 
 using namespace std;
 
 
 const int MAX_MSG_LENGTH=2000;
 const int MAX_SOCKETS=10;
-const int LISTEN_PORT=6666;
-
-class Connection
-{
-protected:
-	int listener;
-	sockaddr_in server_addr;
-public:
-	Connection()
-	{	
-		listener = socket(AF_INET, SOCK_STREAM, 0);
-	}
-	
-	int _listen()
-	{
-		server_addr.sin_family = AF_INET;
-		server_addr.sin_port = htons(LISTEN_PORT);
-		server_addr.sin_addr.s_addr = htonl(INADDR_ANY);
-		if(bind(listener, (sockaddr *)&server_addr, sizeof(server_addr)) < 0)
-		{
-			cout << "bind port error!";
-			return 2;
-		}	
-		listen(listener, 1);
-		return 0;
-	}
-	int get_sock()
-	{
-		return listener;
-	}
-
-	void close_conn()
-	{
-		close(listener);
-	}
-};
-
-class Thread
-{
-protected:
-	boost::thread thr;
-public:
-	Thread()
-	{}
-	void create(void (*func)(int,int),int s,int n)
-	{
-		thr = boost::thread(func,s,n);		
-	}
-	void waitfor()
-	{
-		thr.join();
-	}
-};
-
-class Socket
-{
-protected:
-	int sock;
-public:
-	void connect(int listener)
-	{
-		sock = accept(listener, NULL, NULL);
-	}	
-	int getsock()
-	{
-		return sock; 
-	}
-};
-
-class Client: public Socket, public Thread
-{
-private:
-	int number;
-public:
-	Client() 
-	{}			
-	int getnum()
-	{ 
-		return number; 
-	}		
-	void start(void (*func)(int,int),int listener,int i)
-	{
-		number = i; 
-		connect(listener);
-		create(func,sock,number);
-	}
-};
 
 struct Parameter
 {
@@ -122,15 +32,24 @@ struct Message* parse(int);
 
 int main(int argc, char** argv)
 {
-	Client client[MAX_SOCKETS];
+//	vector<Client> client(10);
+	vector<Client> client;
+//	Client init;
 	Connection lstn;
 	lstn._listen();
+
+	int sock = lstn.get_sock();
 	cout << "server started. waiting for clients" << endl;	
-	int i;
-	for (i = 1; i <= MAX_SOCKETS; i++)	
-		client[i-1].start(&work_with_client,lstn.get_sock(),i);
-	for (int j = 1; j <= i; j++)	
-		client[j-1].waitfor();
+	int i=0;
+//	while(1)
+	for (i = 0; i < 10; i++)
+	{
+//		client.push_back(init);
+		client[i].start(&work_with_client,sock,i+1);
+		i++;
+	}
+	for (int j = 0; j <= i; j++)	
+		client[j].waitfor();
 	cout << "Program exit\n";
 	lstn.close_conn();
 	
@@ -179,6 +98,3 @@ struct Message* parse(int input)
 	}	
 	return message;
 }
-/*
-	input[7] = 0;
-	Mreinput[8] = 12; //а вот здесь количество символов из стоки которая ниже попадает в значение первого параметра  */
