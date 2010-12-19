@@ -1,6 +1,7 @@
 #include "myheader.h"
 #include <boost/thread.hpp>
 #include <stdint.h>
+#include <vector>
 
 using namespace std;
 
@@ -8,7 +9,7 @@ using namespace std;
 const int MAX_MSG_LENGTH=2000;
 const int MAX_SOCKETS=10;
 const int LISTEN_PORT=6666;
-//commit
+
 class Connection
 {
 protected:
@@ -99,7 +100,7 @@ struct Parameter
 {
 	uint16_t parameter_type;
 	uint16_t parameter_length;
-	unsigned char* parameter_value;
+	char* parameter_value;
 };
 	
 struct Message
@@ -110,14 +111,14 @@ struct Message
 	struct Parameter* parameter;
 };
 
-uint16_t char2_to_int(unsigned char* bytes)
+uint16_t char2_to_int(char* bytes)
 {
 	uint16_t var = bytes[0]*256 + bytes[1];
 	return var;
 }
 
 void work_with_client(int,int);
-struct Message parse(unsigned char*);
+struct Message* parse(int);
 
 int main(int argc, char** argv)
 {
@@ -146,6 +147,7 @@ void work_with_client(int sock,int client_num)
 	{
 		Message* message = new Message;
 		message = parse(sock);
+		cout << message->parameter[0].parameter_value;
 		strcpy(msg_to_client,"Message delivered");		
 		send(sock, msg_to_client, sizeof(msg_to_client), 0);
 	}
@@ -156,15 +158,15 @@ struct Message* parse(int input)
 	struct Message* message = new Message;
 	char buf[3];
 	recv(input,buf,1,0);
-	message->protocol_version = (unsigned int)buf;
+	message->protocol_version = (unsigned int)*buf;
 	recv(input,buf,2,0);
 	message->message_type = char2_to_int(buf);
 	recv(input,buf,2,0);
 	message->message_length = char2_to_int(buf);
 	message->parameter = new Parameter[500];
-	unsigned char* ptr_first_param = input;
-	int i=0;
-	while (message->message_length >= input - ptr_first_param)
+	int i = 0;
+	int mes_value_curr_size = 0;
+	while (message->message_length >= mes_value_curr_size)
 	{
 		recv(input,buf,2,0);
 		message->parameter[i].parameter_type = char2_to_int(buf);	
@@ -173,6 +175,7 @@ struct Message* parse(int input)
 		message->parameter[i].parameter_value = new char[message->parameter[i].parameter_length];
 		recv(input, message->parameter[i].parameter_value, message->parameter[i].parameter_length, 0);
 		i++;
+		mes_value_curr_size += 4 + message->parameter[i].parameter_length;
 	}	
 	return message;
 }
