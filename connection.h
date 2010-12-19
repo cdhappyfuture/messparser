@@ -10,7 +10,6 @@
 #include <iostream>
 #include <string.h>
 
-const int LISTEN_PORT = 6666;
 	
 class Connection
 {
@@ -18,6 +17,7 @@ protected:
 	int listener;
 	sockaddr_in server_addr;
 public:
+	Connection();
 	int _listen();
 	int get_sock();
 	void close_conn();

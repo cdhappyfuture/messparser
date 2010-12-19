@@ -8,22 +8,22 @@ const int MAX_SOCKETS=10;
 
 struct Parameter
 {
-	uint16_t parameter_type;
-	uint16_t parameter_length;
-	char* parameter_value;
+	uint16_t type;
+	uint16_t length;
+	char* value;
 };
 	
 struct Message
 {
 	unsigned char protocol_version;
-	uint16_t message_type;
-	uint16_t message_length;
-	struct Parameter* parameter;
+	uint16_t type;
+	uint16_t length;
+	vector<Parameter> parameter;
 };
 
 uint16_t char2_to_int(char* bytes)
 {
-	uint16_t var = bytes[0]*256 + bytes[1];
+	uint16_t var = (unsigned int)bytes[0]*256 + (unsigned int)bytes[1];
 	return var;
 }
 
@@ -32,19 +32,15 @@ struct Message* parse(int);
 
 int main(int argc, char** argv)
 {
-//	vector<Client> client(10);
-	vector<Client> client;
-//	Client init;
+	Client client[MAX_SOCKETS];
 	Connection lstn;
 	lstn._listen();
 
 	int sock = lstn.get_sock();
 	cout << "server started. waiting for clients" << endl;	
 	int i=0;
-//	while(1)
-	for (i = 0; i < 10; i++)
+	for (i = 0; i < MAX_SOCKETS; i++)
 	{
-//		client.push_back(init);
 		client[i].start(&work_with_client,sock,i+1);
 		i++;
 	}
@@ -59,17 +55,14 @@ int main(int argc, char** argv)
 void work_with_client(int sock,int client_num)
 {
 	int bytes_read;
-	char msg_from_client[MAX_MSG_LENGTH];
 	char msg_to_client[MAX_MSG_LENGTH];
-	strcpy(msg_to_client,"ok\n");
-	while(1)
-	{
 		Message* message = new Message;
 		message = parse(sock);
-		cout << message->parameter[0].parameter_value;
-		strcpy(msg_to_client,"Message delivered");		
+		for (int i = 0; i < message->parameter.size(); i++)
+			cout << message->parameter[i].value << " ";
+		cout << endl;
+		strcpy(msg_to_client,"Message delivered\n");
 		send(sock, msg_to_client, sizeof(msg_to_client), 0);
-	}
 }
 
 struct Message* parse(int input)
@@ -78,23 +71,30 @@ struct Message* parse(int input)
 	char buf[3];
 	recv(input,buf,1,0);
 	message->protocol_version = (unsigned int)*buf;
+	cout << "Protocol version: " << *buf <<  endl;
 	recv(input,buf,2,0);
-	message->message_type = char2_to_int(buf);
+	cout << "Message type: " << buf[0] << buf[1] <<  endl;
+	message->type = char2_to_int(buf);
 	recv(input,buf,2,0);
-	message->message_length = char2_to_int(buf);
-	message->parameter = new Parameter[500];
+	cout << "Message length: " << char2_to_int(buf) <<  endl;
+	message->length = char2_to_int(buf);
 	int i = 0;
 	int mes_value_curr_size = 0;
-	while (message->message_length >= mes_value_curr_size)
+	while (message->length >= mes_value_curr_size + 4)
 	{
+		Parameter param;	
 		recv(input,buf,2,0);
-		message->parameter[i].parameter_type = char2_to_int(buf);	
+		param.type = char2_to_int(buf);	
 		recv(input,buf,2,0);
-		message->parameter[i].parameter_length = char2_to_int(buf);	
-		message->parameter[i].parameter_value = new char[message->parameter[i].parameter_length];
-		recv(input, message->parameter[i].parameter_value, message->parameter[i].parameter_length, 0);
+		param.length = char2_to_int(buf);
+		mes_value_curr_size += 4;
+		if (param.length + mes_value_curr_size > message->length)
+			break;
+		param.value = new char[param.length];
+		recv(input, param.value, param.length, 0);
+		message->parameter.push_back(param);
+		mes_value_curr_size += message->parameter[i].length;
 		i++;
-		mes_value_curr_size += 4 + message->parameter[i].parameter_length;
-	}	
+	}
 	return message;
 }

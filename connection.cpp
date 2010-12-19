@@ -1,5 +1,10 @@
 #include "connection.h"
 
+const int LISTEN_PORT = 6667;
+Connection::Connection()
+{
+	listener = socket(AF_INET, SOCK_STREAM, 0);
+}
 int Connection::_listen()
 {
 	server_addr.sin_family = AF_INET;
@@ -36,7 +41,7 @@ void Thread::waitfor()
 
 void Socket::connect(int listener)
 {
-		sock = accept(listener, NULL, NULL);
+	sock = accept(listener, NULL, NULL);
 }	
 int Socket::getsock()
 {
