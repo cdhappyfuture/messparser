@@ -36,19 +36,19 @@ int main(int argc, char** argv)
 		return 2;
 	}
 
-	strcpy(msg_to_server,"lalalalcldldlldlldldlcdlcldcldcldldlcd");
-	msg_to_server[3] = 0;
-	msg_to_server[4] = 16;
-	msg_to_server[7] = 0;
-	msg_to_server[8] = 5;
+	strcpy(msg_to_server,"lalalalcldldlldlldldlcdlcldcldcldldlcd"); // инициализируем рандомной строкой
+	msg_to_server[3] = 0; // первый байт размера сообщения
+	msg_to_server[4] = 16; // второй байт размера сообщения
+	msg_to_server[7] = 0;  
+	msg_to_server[8] = 5; //второй байт размера значения первого параметра
 	strcpy(&msg_to_server[9],"hello");	
 	msg_to_server[16] = 0;
-	msg_to_server[17] = 3;
+	msg_to_server[17] = 3; // второй байт размера значения второго параметра
 	strcpy(&msg_to_server[18],"man");	
 
-	send(sock, msg_to_server, 21, 0);
-	recv(sock, msg_from_server, sizeof(msg_from_server), 0);
-	cout << "server: " << msg_from_server;
+	send(sock, msg_to_server, 21, 0); // отсылаем получившееся сообщение
+	recv(sock, msg_from_server, sizeof(msg_from_server), 0); 
+	cout << "server: " << msg_from_server; 
 
 /*	while(1)
 	{
