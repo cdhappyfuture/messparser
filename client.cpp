@@ -1,9 +1,10 @@
 #include "connection.h"
+#include "messparser.h"
+#include "messhandler.h"
 #include <arpa/inet.h>
 
 using namespace std;
 
-const int MAX_MSG_LENGTH=2000;
 
 int main(int argc, char** argv)
 {
@@ -35,33 +36,22 @@ int main(int argc, char** argv)
 		cout << "connection error\n";
 		return 2;
 	}
-
-	strcpy(msg_to_server,"lalalalcldldlldlldldlcdlcldcldcldldlcd"); // инициализируем рандомной строкой
+	msg_to_server[0] = supported_protocol_version; // Задаем версию протокола
+	msg_to_server[1] = 0; // первый байт типа сбщ
+	msg_to_server[2] = channel_setup; // второй байт типа сбщ
 	msg_to_server[3] = 0; // первый байт размера сообщения
-	msg_to_server[4] = 16; // второй байт размера сообщения
+	msg_to_server[4] = 6; // второй байт размера сообщения
+	msg_to_server[5] = 0; // первый байт типа параметра
+	msg_to_server[6] = ECM_channel_id; // второй байт типа параметра
 	msg_to_server[7] = 0;  
-	msg_to_server[8] = 5; //второй байт размера значения первого параметра
-	strcpy(&msg_to_server[9],"hello");	
-	msg_to_server[16] = 0;
-	msg_to_server[17] = 3; // второй байт размера значения второго параметра
-	strcpy(&msg_to_server[18],"man");	
+	msg_to_server[8] = 2; //второй байт размера значения первого параметра
+	msg_to_server[9] = 0;
+	msg_to_server[10] = 0x01; // второй байт значения второго параметра
 
-	send(sock, msg_to_server, 21, 0); // отсылаем получившееся сообщение
-	recv(sock, msg_from_server, sizeof(msg_from_server), 0); 
+	send(sock, msg_to_server, 11, 0); // отсылаем получившееся сообщение
+	recv(sock, msg_from_server, 10, 0); 
 	cout << "server: " << msg_from_server; 
-
-/*	while(1)
-	{
-		cout << "me: ";
-		cin >> msg_to_server;
-		send(sock, msg_to_server, sizeof(msg_to_server), 0);
-		recv(sock, msg_from_server, sizeof(msg_from_server), 0);
-		cout << "server: " << msg_from_server;
-		if(!strcmp(msg_from_server,"close_connection"))
-			break;
-	}
-*/	while(1);
-	cout << "\nconnection closed. Stopping program...\n";
+	
 	close(sock);
 	
 	return 0;

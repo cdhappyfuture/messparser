@@ -1,14 +1,6 @@
 #ifndef _CONNECTION_H_
 #define _CONNECTION_H_
-
-#include <stdint.h>
-#include <vector>
-#include <boost/thread.hpp>
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <iostream>
-#include <string.h>
+#include "myheaders.h"
 
 	
 class Connection
