@@ -63,7 +63,7 @@ void f_channel_error(int sock, uint16_t status)
 			message->length += 6;
 		}
 	}
-	char* msg_to_client = new char[MAX_MSG_LENGTH];
+	char* msg_to_client = new char[1000];
 	strcpy(msg_to_client,"errrorrrrr");
 	// msg_to_client = unparse(message);
 	send(sock, msg_to_client, strlen(msg_to_client), 0 );
@@ -93,7 +93,7 @@ void f_channel_status(int sock, Channel* channel)
 			message->length += 6;
 		}
 	}
-	char* msg_to_client = new char[MAX_MSG_LENGTH];
+	char* msg_to_client = new char[1000];
 	strcpy(msg_to_client,"errrorrrrr");
 	// msg_to_client = unparse(message);
 	send(sock, msg_to_client, strlen(msg_to_client), 0 );

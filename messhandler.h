@@ -2,8 +2,11 @@
 #define _MESSHANDLER_H_
 #include "myheaders.h"
 #include "messparser.h"
-#include "ECMG.h"
 
+enum
+{
+	MAX_MSG_LENGTH = 2000
+};
 enum
 {
 	channel_setup = 	0x0001,
