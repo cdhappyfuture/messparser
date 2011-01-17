@@ -3,11 +3,14 @@
 #include "myheaders.h"
 #include "messparser.h"
 
-enum
+enum /* Другие константы */
 {
-	MAX_MSG_LENGTH = 2000
+	MAX_STREAMS = 10,
+	MAX_MSG_LENGTH = 2000,
+	SUPPORTED_PROTOCOL_VERSION = 0x03
 };
-enum
+
+enum /* Коды типов сообщений */
 {
 	channel_setup = 	0x0001,
 	channel_test = 		0x0002,
@@ -24,27 +27,50 @@ enum
 	ECM_response = 		0x0202
 };
 
-enum
+enum /* Коды типов параметров */
 {
 	ECM_channel_id = 0x000E,
 	error_status = 0x7000
 };
-enum
-{
-	supported_protocol_version = 0x03
-};
 
-enum
+enum /* Коды статусов ошибок */
 {
 	invalid_message = 0x0001,
-	unsupported_protocol_version = 0x0002
+	unsupported_protocol_version = 0x0002,
+	unknown_message_type_value = 0x0003,
+	message_too_long = 0x0004,
+	unknown_Super_CAS_id_value = 0x0005,
+	unknown_ECM_channel_id_value = 0x0006,
+	unknown_ECM_stream_id_value = 0x0007,
+	too_many_channels_on_this_ECMG = 0x0008,
+	too_many_ECM_streams_on_this_channel = 0x0009
+	too_many_ECM_streams_on_this_ECMG = 0x000A,
+	not_enough_control_words_to_compute_ECM 0x000B,
+	ECMG_out_of_storage_capacity = 0x000C,
+	ECMG_out_of_computational_resources = 0x000D,
+	unknown_parameter_type_value = 0x000E,
+	inconsistent_length_for_DVB_parameter = 0x000F,
+	missing_mandatory_DVB_parameter = 0x0010,
+	invalid_value_for_DVB_parameter = 0x0011,
+	unknown_ECM_id_value = 0x0012,
+	ECM_channel_id_value_already_in_use = 0x0013,
+	ECM_stream_id_value_already_in_use = 0x0014,
+	unknown_error = 0x7000,
+	unrecoverable_error = 0x7001
+};
+
+struct Stream
+{
+	ECM_stream_id;
 };
 
 struct Channel
 {
 	Channel();
 	bool active;
+	bool has_at_least_one_stream;
 	uint16_t ECM_channel_id;
+	vector<uint16_t> stream(MAX_STREAMS);
 	bool section_TSpkt_flag;
 	uint16_t AC_delay_start;
 	uint16_t AC_delay_stop;
@@ -60,6 +86,7 @@ struct Channel
 	uint16_t max_comp_time;
 };
 
-int messhandler(Channel*, Message*, int);
+int ECMG_messhandler(Channel*, Message*, int);
+int SCS_messhandler(Channel*, Message*, int);
 
 #endif

@@ -56,3 +56,8 @@ struct Message* parse(int input)
 	}
 	return message;
 }
+
+char* unparse(Message* message)
+{
+	/**/
+}	

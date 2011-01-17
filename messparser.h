@@ -22,5 +22,6 @@ uint16_t char2_to_int(char* bytes);
 char* int_to_char2(uint16_t var);
 
 struct Message* parse(int);
+char* unparse(Message* message);
 
 #endif
