@@ -1,13 +1,11 @@
 #include "messparser.h"
 
-Message::Message(): protocol_version(0x03)
-{ }
-
 uint16_t char2_to_int(char* bytes)
 {
 	uint16_t var = (unsigned int)bytes[0]*256 + (unsigned int)bytes[1];
 	return var;
 }
+
 char* int_to_char2(uint16_t var)
 {
 	char* str = new char[2];
@@ -17,16 +15,14 @@ char* int_to_char2(uint16_t var)
 }
 struct Message* parse(int input)
 {
-	struct Message* message = new Message;
-	char buf[3];
+	Message* message = calloc(sizeof(Message));
+	char buf[10];
 
 	{ /* Получение данных о message */
-		recv(input,buf,1,0);
+		recv(input,buf,5,0);
 		message->protocol_version = (unsigned int)*buf;
-		recv(input,buf,2,0);
-		message->type = char2_to_int(buf);
-		recv(input,buf,2,0);
-		message->length = char2_to_int(buf);
+		message->type = char2_to_int(&buf[1]);
+		message->length = char2_to_int(&buf[3]);
 	}
 
 	int i = 0;
@@ -34,26 +30,35 @@ struct Message* parse(int input)
 
 	while (message->length >= mes_value_curr_size + 4)
 	{
-		Parameter param;
+		Parameter param[MAX_PARAMS];
 		{ /* Получение данных об очередном параметре */
-			recv(input,buf,2,0);
+			recv(input,buf,4,0);
 			param.type = char2_to_int(buf);	
-			recv(input,buf,2,0);
-			param.length = char2_to_int(buf);
-			mes_value_curr_size += 4;
+			param.length = char2_to_int(&buf[2]);
+			mes_value_curr_size += sizeof(param.type) + sizeof(param.length);
 		}
 
 		if (param.length + mes_value_curr_size > message->length)
 			break;
 
 		{ /* Получение значения параметра */
-			param.value = new char[param.length];
-			recv(input, param.value, param.length, 0);
-			message->parameter.push_back(param);
-			mes_value_curr_size += message->parameter[i].length;
-			i++;
-		}	
+			param[i].value = calloc(param.length + 1);
+			recv(input, param[i].value, param[i].length, 0);
+		}
+		i++;
 	}
+	{ /* Кладем принятые параметры в сообщение */
+		message->parameter = malloc(i, sizeof(Parameter*));
+		int j;
+		for (j = 0; j < i; j++ )
+		{
+			message->parameter[j] = calloc(sizeof(Parameter));
+			*message->parameter[j] = param[j];
+			message->parameter[j].value = calloc(param[j].length + 1);
+			strcpy(message->parameter[j].value, param[j].value);
+			mes_value_curr_size += param[j].length;
+		}
+	}	
 	return message;
 }
 

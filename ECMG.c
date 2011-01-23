@@ -1,36 +1,41 @@
 #include "ECMG.h"
-#include "myheaders.h"
-#include "connection.h"
 #include "messparser.h"
 #include "messhandler.h"
 
 int main(int argc, char** argv)
 {
-	Client client[MAX_SOCKETS];
-	Connection lstn;
-	lstn._listen();
-
-	int sock = lstn.get_sock();
-	std::cout << "server started. waiting for clients" << std::endl;	
+	pthread_t thread[MAX_SOCKETS];
+	int listener;
+	{ /* Запускаем сервер */
+		listener = socket(AF_INET, SOCK_STREAM, 0);
+		sockaddr_in server_addr;
+		server_addr.sin_family = AF_INET;
+		server_addr.sin_port = htons(LISTEN_PORT);
+		server_addr.sin_addr.s_addr = htonl(INADDR_ANY);
+		if(bind(listener, (sockaddr *)&server_addr, sizeof(server_addr)) < 0)
+		{
+			puts("bind port error!");
+			return 2;
+		}
+		listen(listener, 1);
+	}	
+	puts("server started. waiting for clients");	
 	int i=0;
 	for (i = 0; i < MAX_SOCKETS; i++)
-	{
-		client[i].start(&work_with_client,sock,i+1);
-		i++;
+	{ /*Ждем клиента и запускаем его в отдельный поток выполнения */
+		int client_sock = accept(listener,NULL,NULL);
+		pthread_create(&thread[i], NULL, &thread_fun, &client_sock)
 	}
 	for (int j = 0; j <= i; j++)	
-		client[j].waitfor();
-	std::cout << "Program exit" <<std::endl;
-	lstn.close_conn();
-	
+		pthread_join(thread[j]);
+	puts("Closing connection. Server stopped");
+	close(listener);
 	return 0;
 }
 
-void work_with_client(int sock,int client_num)
+void work_with_client(int sock)
 {
-	std::cout << "work_with_client" << std::endl;
-	char msg_to_client[MAX_MSG_LENGTH];
-	Channel* channel = new Channel;
+	Channel* channel = malloc(sizeof(Channel));
 	Message* message;
 	while(1)
 	{
@@ -40,11 +45,19 @@ void work_with_client(int sock,int client_num)
 		закрыть TCP соединение и завершить поток выполнения,
 		то выходим из цикла */
 		{
-			std::cout << "ошибка в handler" << std::endl;
-			delete message;
-			delete channel;
+			puts("ошибка в handler");
+			free(message);
+			free(channel);
 			return;
 		}
-		delete message;
+		free(message);
+	`	free(channel);
 	}
+}
+
+void* thread_fun(void* arg)
+{
+	int sock = *(int*) arg;
+	if (work_with_client(sock))
+		puts("error in thread");
 }

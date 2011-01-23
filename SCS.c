@@ -1,19 +1,15 @@
-//#include "connection.h"
+#include <stdio.h>
 #include "messparser.h"
 #include "messhandler.h"
 #include <arpa/inet.h>
-
-using namespace std;
-
 
 int main(int argc, char** argv)
 {
 	if(argc<2)
 	{
-		cout << "first argument must be server`s ip adress\n";
+		puts("first argument must be server`s ip adress");
 		return 0;
 	}
-	cout << argc;
 	int sock;
 	struct sockaddr_in server_addr;	
 
@@ -23,7 +19,7 @@ int main(int argc, char** argv)
 	sock = socket(AF_INET, SOCK_STREAM, 0);
 	if (sock < 0)
 	{
-		cout << "socket creation error\n";
+		puts("socket creation error");
 		return 1;
 	}
 	
@@ -33,7 +29,7 @@ int main(int argc, char** argv)
 
 	if (connect(sock, (struct sockaddr*)& server_addr, sizeof(server_addr)) < 0)
 	{
-		cout << "connection error\n";
+		puts("connection error");
 		return 2;
 	}
 	msg_to_server[0] = supported_protocol_version; // Задаем версию протокола
@@ -50,7 +46,7 @@ int main(int argc, char** argv)
 
 	send(sock, msg_to_server, 11, 0); // отсылаем получившееся сообщение
 	recv(sock, msg_from_server, 10, 0); 
-	cout << "server: " << msg_from_server; 
+	printf("server: %s", msg_from_server); 
 	
 	close(sock);
 	

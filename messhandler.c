@@ -5,15 +5,10 @@ int sock;
 void f_channel_error(uint16_t);
 void f_channel_status(Channel*);
 
-Channel::Channel(): active(false), has_at_least_one_stream(false)
-{ }
-
-int ECMG_messhandler(Channel* channel, Message* message, int s)
+int ECMG_messhandler(Channel* channel, Message* message, int sock)
 {
-	sock = s; /* инициализируем глобальную переменную,
-		     чтобы не передавать ее каждый раз в функцию */
 	if (message->protocol_version != SUPPORTED_PROTOCOL_VERSION)
-		f_channel_error(unsupported_protocol_version);
+		f_channel_error(unsupported_protocol_version, sock);
 
 	if (message->type >= channel_setup && message->type < stream_setup)
 	{ /* Если сообщение для chennel */
@@ -23,28 +18,28 @@ int ECMG_messhandler(Channel* channel, Message* message, int s)
 			{
 				case channel_test:
 					{
-						if (/*all rigth */)
-							f_chanel_status(channel);
+						if (//all rigth )
+						)	f_chanel_status(channel, sock);
 						else
-							f_channel_error(unrecoverable_error);
+							f_channel_error(unrecoverable_error, sock);
 						break;
 					}
 				case channel_error:
 				case channel_close:
 					{
-						/* Завершаем работу с данным клиентом */
+						// Завершаем работу с данным клиентом
 						return 1; 
 						break;
 					}	
 				case channel_setup:
 					{
-						f_channel_error(too_many_channels_on_this_ECMG);
+						f_channel_error(too_many_channels_on_this_ECMG, sock);
 						break;
 					}	
 				case channel_status:
 					{
-						if (/*not all rigth */)
-							f_channel_error(unknown_ECM_channel_id_value);
+						if (//not all rigth )
+						)	f_channel_error(unknown_ECM_channel_id_value, sock);
 						break;
 					}
 			}
@@ -53,24 +48,24 @@ int ECMG_messhandler(Channel* channel, Message* message, int s)
 		{
 			if (message->type == channel_setup)
 			{
-				std::cout << "Incoming message: channel_setup. Setting channel..." << std::endl;
+				puts("Incoming message: channel_setup. Setting channel...");
 				channel->ECM_channel_id = char2_to_int( message->parameter[0].value );
 				channel->active = true;
-				std::cout << "Channel 1 setup success" << std::endl;
-				std::cout << "Sending channel_status..." << std::endl;
-				if ( /*all rigth */)
-					f_channel_status(channel);
+				puts("Channel 1 setup success");
+				puts("Sending channel_status...");
+				if ( //all rigth )
+				)	f_channel_status(channel, sock);
 				else
-					f_channel_error(unknown_error);
+					f_channel_error(unknown_error, sock);
 			}
 			else
 			{
-				f_channel_error(invalid_message);
+				f_channel_error(invalid_message, sock);
 			}
 		}
-	}
+	}/*
 	else
-	{ /* Если сообщение для stream */
+	{ // Если сообщение для stream 
 		if (channel->active)
 		{
 			if (channel->has_at_least_one_stream)
@@ -82,22 +77,22 @@ int ECMG_messhandler(Channel* channel, Message* message, int s)
 							if ( ! there_is_stream_with_income_id(channel,message))
 								set_stream(channel,message);
 							else
-								f_stream_error(unrecoverable_error);
+								f_stream_error(unrecoverable_error, sock);
 							break;
 						}
 					case stream_test:
 						{
-							if ( /* All rigth */ )
-								f_stream_status(channel);
+							if ( // All rigth  )
+							)	f_stream_status(channel, sock);
 							else
-								f_stream_error(unrecoverable_error);
+								f_stream_error(unrecoverable_error, sock);
 							break;
 						}
 					case stream_close_request:
 						{
 							if (there_is_stream_with_income_id(channel,message))
 							{
-								f_stream_close_response(message);
+								f_stream_close_response(message, sock);
 								close_stream(channel, message);
 							}
 							break;
@@ -109,13 +104,14 @@ int ECMG_messhandler(Channel* channel, Message* message, int s)
 						}
 					case stream_status:
 						{
-							if ( /* not all rigth */ )
-								f_stream_error(unrecoverable_error);
+							if ( // not all rigth  )
+							)
+								f_stream_error(unrecoverable_error, sock);
 							break;
 						}
 					case CW_provision:
 						{
-							f_ECM_response(message);
+							f_ECM_response(message, sock);
 							break;
 						}
 				}
@@ -125,24 +121,25 @@ int ECMG_messhandler(Channel* channel, Message* message, int s)
 				if (message->type == stream_setup)
 				{
 					set_stream(channel,message);
-					if ( /*All rigth */ )
-						f_stream_status(channel);
+					if ( //All rigth  )
+					)
+						f_stream_status(channel, sock);
 					else
-						f_stream_error(unrecoverable_error);
+						f_stream_error(unrecoverable_error, sock);
 				}
 				else
 				{
-					f_stream_error(unrecoverable_error); 
+					f_stream_error(unrecoverable_error, sock); 
 				}	
 			}
 		}
 		else
 		{
-			f_stream_error(unrecoverable_error);
+			f_stream_error(unrecoverable_error, sock);
 		}
 
 		return 0;
-	}
+	} */
 }
 bool there_is_stream_with_income_id(Channel* channel, Message* message)
 {
@@ -150,10 +147,10 @@ bool there_is_stream_with_income_id(Channel* channel, Message* message)
 	//return 1;
 }
 
-void f_set_params(Message* message, uint16_t type, char* value)
+/*void set_params(Message* message, uint16_t type, char* value)
 {
 	Parameter param;
-	{ /* channel id */
+	{ // channel id 
 		param.type = ECM_channel_id; // ECM_channel_id
 		param.length = 2;
 		param.value = int_to_char2(0x0001);
@@ -163,7 +160,7 @@ void f_set_params(Message* message, uint16_t type, char* value)
 	switch (message->type)
 	{
 		case channel_error
-		{ /* error status */
+		{ // error status 
 			param.type = error_status; // error_status
 			param.length = 2;
 			param.value = int_to_char2(status);
@@ -171,7 +168,7 @@ void f_set_params(Message* message, uint16_t type, char* value)
 		message->parameter.push_back(param);
 		message->length += 6;
 	}
-}
+} */
 void set_stream(Channel* channel, Message* message)
 {
 	channel->stream.push_back( char2_to_int(message->parameter[1].value) );
@@ -186,11 +183,12 @@ void close_stream(Channel* channel, Message* message)
 }
 void f_channel_error(uint16_t status)
 {
-	Message* message = new Message;
-	{ /* Задание данных сообщения */
+	Message* message = calloc(sizeof(Message));
+	message->protocol_version = SUPPORTED_PROTOCOL_VERSION;
+	{ // Задание данных сообщения
 		message->type = channel_error;
 		message->length = 0;
-		{ /* Задание набора параметров */
+		{ // Задание набора параметров 
 		}
 	}
 	char* msg_to_client = new char[1000];

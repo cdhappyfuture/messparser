@@ -59,18 +59,12 @@ enum /* Коды статусов ошибок */
 	unrecoverable_error = 0x7001
 };
 
-struct Stream
+struct _Channel
 {
-	ECM_stream_id;
-};
-
-struct Channel
-{
-	Channel();
 	bool active;
 	bool has_at_least_one_stream;
 	uint16_t ECM_channel_id;
-	vector<uint16_t> stream(MAX_STREAMS);
+	uint16_t stream(MAX_STREAMS);
 	bool section_TSpkt_flag;
 	uint16_t AC_delay_start;
 	uint16_t AC_delay_stop;
@@ -85,6 +79,7 @@ struct Channel
 	bool CW_per_msg;
 	uint16_t max_comp_time;
 };
+typedef struct _Channel Channel;
 
 int ECMG_messhandler(Channel*, Message*, int);
 int SCS_messhandler(Channel*, Message*, int);
