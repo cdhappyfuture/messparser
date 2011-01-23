@@ -6,6 +6,7 @@ void free_mes(Message* m)
 	for (i = 0; i < m->params; i++)
 		free(m->parameter[i]->value);
 	free(m->parameter);
+	free(m);
 }		
 uint16_t char2_to_int(char* bytes)
 {
