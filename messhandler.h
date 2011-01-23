@@ -43,9 +43,9 @@ enum /* Коды статусов ошибок */
 	unknown_ECM_channel_id_value = 0x0006,
 	unknown_ECM_stream_id_value = 0x0007,
 	too_many_channels_on_this_ECMG = 0x0008,
-	too_many_ECM_streams_on_this_channel = 0x0009
+	too_many_ECM_streams_on_this_channel = 0x0009,
 	too_many_ECM_streams_on_this_ECMG = 0x000A,
-	not_enough_control_words_to_compute_ECM 0x000B,
+	not_enough_control_words_to_compute_ECM = 0x000B,
 	ECMG_out_of_storage_capacity = 0x000C,
 	ECMG_out_of_computational_resources = 0x000D,
 	unknown_parameter_type_value = 0x000E,
@@ -61,11 +61,12 @@ enum /* Коды статусов ошибок */
 
 struct _Channel
 {
-	bool active;
-	bool has_at_least_one_stream;
+	int active;
+	int has_at_least_one_stream;
 	uint16_t ECM_channel_id;
-	uint16_t stream(MAX_STREAMS);
-	bool section_TSpkt_flag;
+	uint16_t stream[MAX_STREAMS];
+	int streams;
+	int section_TSpkt_flag;
 	uint16_t AC_delay_start;
 	uint16_t AC_delay_stop;
 	uint16_t delay_start;
@@ -75,8 +76,8 @@ struct _Channel
 	uint16_t ECM_rep_period;
 	uint16_t max_streams;
 	uint16_t min_CP_duration;
-	bool lead_CW;
-	bool CW_per_msg;
+	int lead_CW;
+	int CW_per_msg;
 	uint16_t max_comp_time;
 };
 typedef struct _Channel Channel;

@@ -2,25 +2,30 @@
 
 int sock;
 
-void f_channel_error(uint16_t);
-void f_channel_status(Channel*);
+void f_channel_error(uint16_t, int);
+void f_channel_status(Channel*, int);
 
 int ECMG_messhandler(Channel* channel, Message* message, int sock)
 {
 	if (message->protocol_version != SUPPORTED_PROTOCOL_VERSION)
+	{
 		f_channel_error(unsupported_protocol_version, sock);
+		puts("unsupported_protocol_version");
+		return 1;
+	}
 
 	if (message->type >= channel_setup && message->type < stream_setup)
-	{ /* Если сообщение для chennel */
-		if (channel->active) 
+	{ /* Если сообщение для channel */
+		if (channel->active == 1) 
 		{
+			puts("channel is active!");
 			switch (message->type)
 			{
 				case channel_test:
 					{
-						if (//all rigth )
-						)	f_chanel_status(channel, sock);
-						else
+						//if (//all rigth )		
+						//f_chanel_status(channel, sock);
+						//else
 							f_channel_error(unrecoverable_error, sock);
 						break;
 					}
@@ -28,18 +33,20 @@ int ECMG_messhandler(Channel* channel, Message* message, int sock)
 				case channel_close:
 					{
 						// Завершаем работу с данным клиентом
+						puts("Вот где собака зарыта");
 						return 1; 
 						break;
 					}	
 				case channel_setup:
 					{
+						puts("Уже существует канал!");
 						f_channel_error(too_many_channels_on_this_ECMG, sock);
 						break;
 					}	
 				case channel_status:
 					{
-						if (//not all rigth )
-						)	f_channel_error(unknown_ECM_channel_id_value, sock);
+						//if (//not all rigth )
+							f_channel_error(unknown_ECM_channel_id_value, sock);
 						break;
 					}
 			}
@@ -49,14 +56,15 @@ int ECMG_messhandler(Channel* channel, Message* message, int sock)
 			if (message->type == channel_setup)
 			{
 				puts("Incoming message: channel_setup. Setting channel...");
-				channel->ECM_channel_id = char2_to_int( message->parameter[0].value );
-				channel->active = true;
+				channel->ECM_channel_id = char2_to_int( message->parameter[0]->value );
+				channel->active = 1;
 				puts("Channel 1 setup success");
 				puts("Sending channel_status...");
-				if ( //all rigth )
-				)	f_channel_status(channel, sock);
-				else
+				//if ( //all rigth )
+				//	f_channel_status(channel, sock);
+				//else
 					f_channel_error(unknown_error, sock);
+				puts("Сообщение отправлено");	
 			}
 			else
 			{
@@ -140,8 +148,10 @@ int ECMG_messhandler(Channel* channel, Message* message, int sock)
 
 		return 0;
 	} */
+	puts("Возвращаем 0");
+	return 0;
 }
-bool there_is_stream_with_income_id(Channel* channel, Message* message)
+int there_is_stream_with_income_id(Channel* channel, Message* message)
 {
 	return 0;
 	//return 1;
@@ -171,19 +181,20 @@ bool there_is_stream_with_income_id(Channel* channel, Message* message)
 } */
 void set_stream(Channel* channel, Message* message)
 {
-	channel->stream.push_back( char2_to_int(message->parameter[1].value) );
-	channel->has_at_least_one_stream = true;
+	channel->stream[channel->streams + 1] = ( char2_to_int(message->parameter[1]->value) );
+	channel->has_at_least_one_stream = 1;
 }
 
 void close_stream(Channel* channel, Message* message)
 {
-	for (int i = 0; i < channel->stream.size(); i++)
-		if (channel->stream[i] == char2_to_int(message->parameter[1].value) )
+	int i;
+	for (i = 0; i < channel->streams; i++)
+		if (channel->stream[i] == char2_to_int(message->parameter[1]->value) )
 			channel->stream[i]; // закрываем	
 }
-void f_channel_error(uint16_t status)
+void f_channel_error(uint16_t status, int sock)
 {
-	Message* message = calloc(sizeof(Message));
+	Message* message = malloc(sizeof(Message));
 	message->protocol_version = SUPPORTED_PROTOCOL_VERSION;
 	{ // Задание данных сообщения
 		message->type = channel_error;
@@ -191,7 +202,7 @@ void f_channel_error(uint16_t status)
 		{ // Задание набора параметров 
 		}
 	}
-	char* msg_to_client = new char[1000];
+	char* msg_to_client = malloc(1000);
 	strcpy(msg_to_client,"errrorrrrr");
 	// msg_to_client = unparse(message);
 	send(sock, msg_to_client, strlen(msg_to_client), 0 );

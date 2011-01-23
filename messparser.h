@@ -16,6 +16,7 @@ struct _Message
 	unsigned char protocol_version;
 	uint16_t type;
 	uint16_t length;
+	int params;
 	Parameter** parameter;
 };
 typedef struct _Message Message;
@@ -23,7 +24,9 @@ typedef struct _Message Message;
 uint16_t char2_to_int(char* bytes);
 char* int_to_char2(uint16_t var);
 
+
+void free_mes(Message*);
 Message* parse(int);
-char* unparse(Message* message);
+char* unparse(Message*);
 
 #endif
