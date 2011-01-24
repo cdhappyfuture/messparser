@@ -59,7 +59,8 @@ Message* parse(int input)
 			param[i].value = malloc(param[i].length + 1);
 			recv(input, param[i].value, param[i].length, 0);
 		}
-		puts("Получили");
+		puts("Получили");	
+		printf("PARAM_0_VALUE = %i\n", char2_to_int(param[i].value));
 		if ((param[i].length + mes_value_curr_size) == message->length)
 		{
 			puts("Длина сообщения сошлась");
@@ -77,7 +78,7 @@ Message* parse(int input)
 			message->parameter[j] = malloc(sizeof(Parameter));
 			*message->parameter[j] = param[j];
 			message->parameter[j]->value = malloc(param[j].length + 1);
-			strcpy(message->parameter[j]->value, param[j].value);
+			memcpy((void*)message->parameter[j]->value, (void*)param[j].value, message->parameter[j]->length);
 			mes_value_curr_size += param[j].length;
 		}
 	}	

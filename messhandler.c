@@ -56,9 +56,16 @@ int ECMG_messhandler(Channel* channel, Message* message, int sock)
 			{
 				puts("Incoming message: channel_setup. Setting channel...");
 				channel->ECM_channel_id = char2_to_int( message->parameter[0]->value );
+				printf("CID = %i\n", channel->ECM_channel_id);
+				printf("CL = %i\n", message->parameter[0]->length);
+				uint16_t foo;
+				memcpy((void*)&foo, (void*)message->parameter[0]->value, 2);
+				foo = ntohs(foo);
+				printf("PARAM_0_VALUE = %i\n", char2_to_int(message->parameter[0]->value));
 				channel->active = 1;
 				puts("Channel 1 setup success");
 				puts("Sending channel_status...");
+				
 				//if ( //all rigth )
 				//	f_channel_status(channel, sock);
 				//else

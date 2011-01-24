@@ -1,6 +1,7 @@
 #ifndef _MYHEADERS_H_
 #define _MYHEADERS_H_
 
+#include <stdlib.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <sys/types.h>

@@ -33,42 +33,53 @@ int main(int argc, char** argv)
 		puts("connection error");
 		return 2;
 	}
-
-	Message* message = malloc(sizeof(Message));
-	message->parameter = calloc(2, sizeof(Parameter*));
-	message->parameter[0] = malloc(sizeof(Parameter));
-	message->protocol_version = SUPPORTED_PROTOCOL_VERSION;
-	message->type = htons(channel_setup);
-	message->params = 1;
-	puts("Переходим к параметру");
-	message->parameter[0]->type = htons(ECM_channel_id);
-	message->parameter[0]->length = htons(2);
-	puts("Переходим к значению параметра");
-	message->parameter[0]->value = malloc(message->parameter[0]->length + 1);
-	puts("Выделили память");
-	uint16_t param_value = 1;
-	param_value = htons(param_value);
-	printf("Param_value for socket = %i\n", param_value);
-	puts("Пытаемся записать значение");
-	memcpy((void*)message->parameter[0]->value, (void*)&param_value, 2);
-	puts("Задаем длину сбщ");
-	message->length = htons(sizeof(message->parameter[0]->type) + sizeof(message->parameter[0]->length) +
-		ntohs(message->parameter[0]->length));
-	printf("meslengthH = %i\n", message->length);
-	printf("strlen %i", strlen(message->parameter[0]->value));
-	uint16_t foo;
-	memcpy((void*)&foo, (void*)message->parameter[0]->value, 2);
-	printf("Param_value after socket= %i\n", foo);
-	foo = ntohs(foo);
-	printf("Param_value for host = %i\n", foo);
-	msg_to_server = unparse(message);
-	printf("message->length for socket = %i", ntohs(message->length));
-	send(sock, msg_to_server, sizeof(message->protocol_version) +
-		sizeof(message->type) + sizeof(message->length) + ntohs(message->length), 0); // отсылаем получившееся сообщение
+	
+	f_channel_setup(sock);
 	recv(sock, msg_from_server, 10, 0); 
 	printf("server: %s\n", msg_from_server); 
 	
 	close(sock);
 	
 	return 0;
+}
+
+void f_channel_setup(int sock)
+{		
+	Message* message = malloc(sizeof(Message));
+	message->type = channel_setup;
+	message->params = 1;
+	alloc_params(message);
+	set_param(message, 0, ECM_channel_id, 0x0002, 0x0002);
+	setup_and_send(sock, message);
+	free_mes(message);	
+}
+
+void alloc_params(Message* message)
+{
+	message->parameter = calloc(message->params, sizeof(Parameter*));
+	int i;
+	for (i = 0; i < message->params; i++)
+		message->parameter[i] = malloc(sizeof(Parameter));
+}	
+
+void setup_and_send(int sock, Message* message)
+{	
+	message->protocol_version = SUPPORTED_PROTOCOL_VERSION;
+	message->type = htons(message->type);
+	int i;
+	for (i = 0; i < message->params; i++ )
+		message->length += sizeof(message->parameter[i]->type) + sizeof(message->parameter[i]->length) +	
+			ntohs(message->parameter[i]->length);
+	message->length = htons(message->length);
+	char* msg_to_server = unparse(message);
+	send(sock, msg_to_server, sizeof(message->protocol_version) + sizeof(message->type) + 
+		sizeof(message->length) + ntohs(message->length), 0); // отсылаем получившееся сообщение
+}
+void set_param(Message* message, int i, uint16_t type, uint16_t len, uint16_t value)
+{	
+	message->parameter[i]->type = htons(type);
+	message->parameter[i]->value = malloc(message->parameter[i]->length + 1);
+	message->parameter[i]->length = htons(len);
+	value = htons(value);
+	memcpy((void*)message->parameter[i]->value, (void*)&value, len);
 }
