@@ -8,17 +8,19 @@ void free_mes(Message* m)
 	free(m->parameter);
 	free(m);
 }		
-uint16_t char2_to_int(char* bytes)
+uint16_t char2_to_int(char* bytes) //рабочая
 {
-	uint16_t var = (unsigned int)bytes[0]*256 + (unsigned int)bytes[1];
+	uint16_t var = (uint16_t)bytes[0]*256 + (uint16_t)bytes[1];
 	return var;
 }
 
 char* int_to_char2(uint16_t var)
 {
-	char* str = calloc(2, sizeof(char));
+	char* str = calloc(3, sizeof(char));
+	var = htons(var);
 	str[0] = ((char*)&var)[0];
 	str[1] = ((char*)&var)[1];
+	str[2] = '\0';
 	return str;	
 }
 Message* parse(int input)
@@ -63,7 +65,6 @@ Message* parse(int input)
 			puts("Длина сообщения сошлась");
 			break;
 		}
-		printf("Длина сообщения не сошлась: message->length = %i, param[i]length = %i, cursize = %i", message->length, param[i].length, mes_value_curr_size);
 		i++;
 	}
 	{ /* Кладем принятые параметры в сообщение */
@@ -85,5 +86,25 @@ Message* parse(int input)
 
 char* unparse(Message* message)
 {
-	/**/
+	puts("Начинаем unparse");
+	int message_size;
+	message_size = message->length + sizeof(message->length) + sizeof(message->protocol_version) + sizeof(message->type);
+	printf("%i\n", message_size);
+	char* str = calloc(message_size + 1, sizeof(char));
+	str[0] = message->protocol_version;
+	memcpy((void*)&str[1], (void*)&message->type, sizeof(message->type));
+	memcpy((void*)&str[3], (void*)&message->length,  sizeof(message->length));
+	printf("MesLength after memcpy = %i\n", char2_to_int(&str[3]));
+	int i,j = 5;
+	for (i = 0; i < message->params; i++)
+	{
+		memcpy((void*)&str[j], (void*)&message->parameter[i]->type, sizeof(message->parameter[i]->type));
+		j += sizeof(message->parameter[i]->type);
+		memcpy((void*)&str[j], (void*)&message->parameter[i]->length, sizeof(message->parameter[i]->type));
+		printf("Длина сообщения после memcpy %i\n", (int)str[j+1]);
+		j += sizeof(message->parameter[i]->length);
+		memcpy(&str[j], message->parameter[i]->value, message->parameter[i]->length);
+		j += message->parameter[i]->length;
+	}
+	return str;
 }	

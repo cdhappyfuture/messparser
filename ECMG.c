@@ -50,7 +50,6 @@ void work_with_client(int sock)
 		{
 			puts("Закрываем TCP соединение");
 			free_mes(message);
-			free(channel);
 			break;
 		}
 		puts("Начинаем освобождать память");

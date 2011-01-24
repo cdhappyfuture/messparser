@@ -33,7 +33,6 @@ int ECMG_messhandler(Channel* channel, Message* message, int sock)
 				case channel_close:
 					{
 						// Завершаем работу с данным клиентом
-						puts("Вот где собака зарыта");
 						return 1; 
 						break;
 					}	
