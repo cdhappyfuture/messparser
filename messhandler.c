@@ -1,15 +1,14 @@
+#include "myheaders.h"
+#include "messparser.h"
 #include "messhandler.h"
+#include "messages.h"
 
-int sock;
-
-void f_channel_error(uint16_t, int);
-void f_channel_status(Channel*, int);
 
 int ECMG_messhandler(Channel* channel, Message* message, int sock)
 {
 	if (message->protocol_version != SUPPORTED_PROTOCOL_VERSION)
 	{
-		f_channel_error(unsupported_protocol_version, sock);
+		f_channel_error(sock, unsupported_protocol_version);
 		puts("unsupported_protocol_version");
 		return 1;
 	}
@@ -26,7 +25,7 @@ int ECMG_messhandler(Channel* channel, Message* message, int sock)
 						//if (//all rigth )		
 						//f_chanel_status(channel, sock);
 						//else
-							f_channel_error(unrecoverable_error, sock);
+						f_channel_error(sock, unrecoverable_error);
 						break;
 					}
 				case channel_error:
@@ -39,13 +38,13 @@ int ECMG_messhandler(Channel* channel, Message* message, int sock)
 				case channel_setup:
 					{
 						puts("Уже существует канал!");
-						f_channel_error(too_many_channels_on_this_ECMG, sock);
+						f_channel_error(sock, too_many_channels_on_this_ECMG);
 						break;
 					}	
 				case channel_status:
 					{
 						//if (//not all rigth )
-							f_channel_error(unknown_ECM_channel_id_value, sock);
+						f_channel_error(sock, too_many_channels_on_this_ECMG);
 						break;
 					}
 			}
@@ -66,10 +65,10 @@ int ECMG_messhandler(Channel* channel, Message* message, int sock)
 				puts("Channel 1 setup success");
 				puts("Sending channel_status...");
 				
-				//if ( //all rigth )
-				//	f_channel_status(channel, sock);
-				//else
-					f_channel_error(unknown_error, sock);
+				if ( 1 )
+					f_channel_status(sock);
+				else
+					f_channel_error(sock, unrecoverable_error);
 				puts("Сообщение отправлено");	
 			}
 			else
@@ -91,13 +90,13 @@ int ECMG_messhandler(Channel* channel, Message* message, int sock)
 							if ( ! there_is_stream_with_income_id(channel,message))
 								set_stream(channel,message);
 							else
-								f_stream_error(unrecoverable_error, sock);
+								f_stream_error(sock, unrecoverable_error);
 							break;
 						}
 					case stream_test:
 						{
-							if ( // All rigth  )
-							)	f_stream_status(channel, sock);
+							if ( 1  )
+								f_stream_status(sock, 1,1);
 							else
 								f_stream_error(unrecoverable_error, sock);
 							break;
@@ -118,8 +117,7 @@ int ECMG_messhandler(Channel* channel, Message* message, int sock)
 						}
 					case stream_status:
 						{
-							if ( // not all rigth  )
-							)
+							if ( 0  )
 								f_stream_error(unrecoverable_error, sock);
 							break;
 						}
@@ -135,8 +133,7 @@ int ECMG_messhandler(Channel* channel, Message* message, int sock)
 				if (message->type == stream_setup)
 				{
 					set_stream(channel,message);
-					if ( //All rigth  )
-					)
+					if ( 1  )
 						f_stream_status(channel, sock);
 					else
 						f_stream_error(unrecoverable_error, sock);
@@ -154,7 +151,6 @@ int ECMG_messhandler(Channel* channel, Message* message, int sock)
 
 		return 0;
 	} */
-	puts("Возвращаем 0");
 	return 0;
 }
 int there_is_stream_with_income_id(Channel* channel, Message* message)
@@ -163,28 +159,6 @@ int there_is_stream_with_income_id(Channel* channel, Message* message)
 	//return 1;
 }
 
-/*void set_params(Message* message, uint16_t type, char* value)
-{
-	Parameter param;
-	{ // channel id 
-		param.type = ECM_channel_id; // ECM_channel_id
-		param.length = 2;
-		param.value = int_to_char2(0x0001);
-	}	
-	message->parameter.push_back(param);
-	message->length += sizeof(param.type) + sizeof(param.length) + strlen(param.value);
-	switch (message->type)
-	{
-		case channel_error
-		{ // error status 
-			param.type = error_status; // error_status
-			param.length = 2;
-			param.value = int_to_char2(status);
-		}	
-		message->parameter.push_back(param);
-		message->length += 6;
-	}
-} */
 void set_stream(Channel* channel, Message* message)
 {
 	channel->stream[channel->streams + 1] = ( char2_to_int(message->parameter[1]->value) );
@@ -197,19 +171,4 @@ void close_stream(Channel* channel, Message* message)
 	for (i = 0; i < channel->streams; i++)
 		if (channel->stream[i] == char2_to_int(message->parameter[1]->value) )
 			channel->stream[i]; // закрываем	
-}
-void f_channel_error(uint16_t status, int sock)
-{
-	Message* message = malloc(sizeof(Message));
-	message->protocol_version = SUPPORTED_PROTOCOL_VERSION;
-	{ // Задание данных сообщения
-		message->type = channel_error;
-		message->length = 0;
-		{ // Задание набора параметров 
-		}
-	}
-	char* msg_to_client = malloc(1000);
-	strcpy(msg_to_client,"errrorrrrr");
-	// msg_to_client = unparse(message);
-	send(sock, msg_to_client, strlen(msg_to_client), 0 );
 }

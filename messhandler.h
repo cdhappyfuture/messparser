@@ -1,7 +1,6 @@
 #ifndef _MESSHANDLER_H_
 #define _MESSHANDLER_H_
 #include "myheaders.h"
-#include "messparser.h"
 
 enum /* Другие константы */
 {
@@ -30,6 +29,8 @@ enum /* Коды типов сообщений */
 enum /* Коды типов параметров */
 {
 	ECM_channel_id = 0x000E,
+	ECM_stream_id = 0x000F,
+	ECM_id = 0x0019,
 	error_status = 0x7000
 };
 
