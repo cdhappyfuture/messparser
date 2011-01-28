@@ -106,7 +106,9 @@ char* unparse(Message* message)
 		printf("Длина сообщения после memcpy %i\n", (int)str[j+1]);
 		j += sizeof(message->parameter[i]->length);
 		memcpy(&str[j], message->parameter[i]->value, message->parameter[i]->length);
-		j += message->parameter[i]->length;
+		j += ntohs(message->parameter[i]->length);
 	}
+	str[j] = '\0';
+	printf("Посылаемая длина = %i\n", j);
 	return str;
 }	

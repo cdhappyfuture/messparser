@@ -12,15 +12,14 @@ void setup_and_send(int sock, Message* message)
 {	
 	message->protocol_version = SUPPORTED_PROTOCOL_VERSION;
 	message->type = htons(message->type);
+	set_param(0, message, ECM_channel_id, STD_VALUE_LEN, 0x0001);
 	int i;
 	for (i = 0; i < message->params; i++ )
 		message->length += sizeof(message->parameter[i]->type) + sizeof(message->parameter[i]->length) +	
 			ntohs(message->parameter[i]->length);
 	message->length = htons(message->length);
-	set_param(0, message, ECM_channel_id, STD_VALUE_LEN, 0x0001);
 	char* msg_to_server = unparse(message);
-	send(sock, msg_to_server, sizeof(message->protocol_version) + sizeof(message->type) + 
-		sizeof(message->length) + ntohs(message->length), 0); // отсылаем получившееся сообщение
+	send(sock, msg_to_server, 5 + ntohs(message->length), 0); // отсылаем получившееся сообщение
 }
 void set_param(int i, Message* message, uint16_t type, uint16_t len, uint16_t value)
 {	
@@ -64,7 +63,7 @@ void f_channel_status(int sock)
 {
 	Message* message = malloc(sizeof(Message));
 	message->type = channel_status;
-	message->params = 10;
+	message->params = 1;
 	alloc_params(message);
 	// тут задаем параметры
 	setup_and_send(sock, message);

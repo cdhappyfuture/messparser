@@ -36,10 +36,9 @@ int main(int argc, char** argv)
 	}
 	
 	f_channel_setup(sock);
-	recv(sock, msg_from_server, 10, 0); 
 	printf("server: %s\n", msg_from_server); 
-	
-	close(sock);
+	while(1){}	
+//	close(sock);
 	
 	return 0;
 }
