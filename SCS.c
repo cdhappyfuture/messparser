@@ -36,9 +36,25 @@ int main(int argc, char** argv)
 	}
 	
 	f_channel_setup(sock);
-	printf("server: %s\n", msg_from_server); 
-	while(1){}	
-//	close(sock);
+	Message* message = parse(sock);
+	if (message->type == channel_status && char2_to_int(message->parameter[0]->value) == 1)
+	{
+		puts("Channel 1 setup success");
+		f_channel_test(sock);
+		if (message->type == channel_status && char2_to_int(message->parameter[0]->value) == 1)
+		{
+			puts("Channel is active");
+			f_channel_close(sock);
+		}
+	}
+	else
+	{
+		puts("Channel 1 setup fail");
+		puts("Sending channel_close...");
+		f_channel_error(sock, unrecoverable_error);
+	}
+	puts("Shutting down...");
+	close(sock);
 	
 	return 0;
 }

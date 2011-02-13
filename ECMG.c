@@ -42,7 +42,6 @@ void work_with_client(int sock)
 	Message* message;
 	while(1)
 	{
-		puts("Начинаем обрабатывать очередное сообщ");
 		message = parse(sock);
 		if (ECMG_messhandler(channel, message, sock)) 
 		/* если в результате обработки сообщения необходимо
@@ -53,9 +52,7 @@ void work_with_client(int sock)
 			free_mes(message);
 			break;
 		}
-		puts("Начинаем освобождать память");
 		free_mes(message);
-		puts("Закончили освобождать память");
 	}
 	free(channel);
 }

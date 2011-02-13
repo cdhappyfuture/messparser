@@ -17,27 +17,26 @@ int ECMG_messhandler(Channel* channel, Message* message, int sock)
 	{ /* Если сообщение для channel */
 		if (channel->active == 1) 
 		{
-			puts("channel is active!");
 			switch (message->type)
 			{
 				case channel_test:
 					{
 						//if (//all rigth )		
-						//f_chanel_status(channel, sock);
-						//else
-						f_channel_error(sock, unrecoverable_error);
+						f_channel_status(sock);
+						// else f_channel_error(sock, unrecoverable_error);
 						break;
 					}
 				case channel_error:
 				case channel_close:
 					{
 						// Завершаем работу с данным клиентом
+						puts("Incoming message channel_error or channel close. Closing connection");
 						return 1; 
 						break;
 					}	
 				case channel_setup:
 					{
-						puts("Уже существует канал!");
+						puts("Channel alredy exists! Sending channel_error...");
 						f_channel_error(sock, too_many_channels_on_this_ECMG);
 						break;
 					}	
@@ -55,21 +54,22 @@ int ECMG_messhandler(Channel* channel, Message* message, int sock)
 			{
 				puts("Incoming message: channel_setup. Setting channel...");
 				channel->ECM_channel_id = char2_to_int( message->parameter[0]->value );
-				printf("CID = %i\n", channel->ECM_channel_id);
-				printf("CL = %i\n", message->parameter[0]->length);
-				printf("PARAM_0_VALUE = %i\n", char2_to_int(message->parameter[0]->value));
 				channel->active = 1;
-				puts("Channel 1 setup success");
-			/*	puts("Sending channel_status...");
-				
-				if ( 1 )
+				if (channel->active == 1)
+				{
+					printf("Channel %i setup success", channel->ECM_channel_id);
+					puts("Sending channel_status...");
 					f_channel_status(sock);
+				}
 				else
+				{
+					puts("Error setuping channel. Sending channel_error...");
 					f_channel_error(sock, unrecoverable_error);
-				puts("Сообщение отправлено");	*/
+				}
 			}
 			else
-			{
+			{	
+				puts("Channel is not setuped. Sending channel error...");
 				f_channel_error(invalid_message, sock);
 			}
 		}

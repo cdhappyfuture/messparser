@@ -11,22 +11,21 @@ void alloc_params(Message* message)
 void setup_and_send(int sock, Message* message)
 {	
 	message->protocol_version = SUPPORTED_PROTOCOL_VERSION;
-	message->type = htons(message->type);
+	message->type = message->type;
 	set_param(0, message, ECM_channel_id, STD_VALUE_LEN, 0x0001);
 	int i;
 	for (i = 0; i < message->params; i++ )
 		message->length += sizeof(message->parameter[i]->type) + sizeof(message->parameter[i]->length) +	
-			ntohs(message->parameter[i]->length);
-	message->length = htons(message->length);
+			message->parameter[i]->length;
+	message->length = message->length;
 	char* msg_to_server = unparse(message);
-	send(sock, msg_to_server, 5 + ntohs(message->length), 0); // отсылаем получившееся сообщение
+	send(sock, msg_to_server, 5 + message->length, 0); // отсылаем получившееся сообщение
 }
 void set_param(int i, Message* message, uint16_t type, uint16_t len, uint16_t value)
 {	
-	message->parameter[i]->type = htons(type);
+	message->parameter[i]->type = type;
 	message->parameter[i]->value = malloc(len + 1);
-	message->parameter[i]->length = htons(len);
-	value = htons(value);
+	message->parameter[i]->length = len;
 	memcpy((void*)message->parameter[i]->value, (void*)&value, len);
 }
 //----------------------------------------------------------------------------------------
@@ -65,7 +64,6 @@ void f_channel_status(int sock)
 	message->type = channel_status;
 	message->params = 1;
 	alloc_params(message);
-	// тут задаем параметры
 	setup_and_send(sock, message);
 	free_mes(message);
 }
