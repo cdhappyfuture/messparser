@@ -18,8 +18,7 @@ void setup_and_send(int sock, Message* message)
 		message->length += sizeof(message->parameter[i]->type) + sizeof(message->parameter[i]->length) +	
 			message->parameter[i]->length;
 	message->length = message->length;
-	char* msg_to_server = unparse(message);
-	send(sock, msg_to_server, 5 + message->length, 0); // отсылаем получившееся сообщение
+	serialize_and_send(message, sock);
 }
 void set_param(int i, Message* message, uint16_t type, uint16_t len, uint16_t value)
 {	

@@ -21,12 +21,14 @@ struct _Message
 };
 typedef struct _Message Message;
 
+typedef struct timeval Time;
+
 uint16_t char2_to_int(char* bytes);
 char* int_to_char2(uint16_t var);
 
 
 void free_mes(Message*);
-Message* parse(int);
-char* unparse(Message*);
+Message* recv_and_deserialize(int);
+void serialize_and_send(Message*, int);
 
 #endif

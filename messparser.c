@@ -24,59 +24,90 @@ char* int_to_char2(uint16_t var)
 	str[2] = '\0';
 	return str;	
 }
-Message* parse(int input)
+Message* recv_and_deserialize(int sock)
 {
+//	puts("parse");
 	Message* message = malloc(sizeof(Message));
-	char buf[100];
-	{ /* Получение данных о message */
-		recv(input,buf,5,0);
-		message->protocol_version = (unsigned int)*buf;
-		message->type = char2_to_int(&buf[1]);
-		message->length = char2_to_int(&buf[3]);
-	}
-
+	// извлекаем из сокета шапку сообщения
+	char* buf = malloc(6);
+	fd_set readset;
+	FD_SET(sock, &readset);
+	Time tv;
+	tv.tv_sec = 6;
+	tv.tv_usec = 0;
+	if (select(sock + 1, &readset, NULL, NULL, &tv) <= 0)
+		return NULL;
+	if (FD_ISSET(sock, &readset))
+		if (recv(sock, buf, 5, 0) <= 0)
+			return NULL;
+//	puts("получили шапку");
+	message->protocol_version = (unsigned int)*buf;
+	message->type = char2_to_int(&buf[1]);
+	message->length = char2_to_int(&buf[3]);
+	free(buf);
+	// извлекаем из сокета тело сообщения
+	buf = malloc(message->length + 1);
+	char* buf_for_free = buf;
+	tv.tv_sec = 5;
+	tv.tv_usec = 0;
+	FD_ZERO(&readset);
+	FD_SET(sock, &readset);
+	if (select(sock + 1, &readset, NULL, NULL, &tv) <= 0)
+		return NULL;
+//	puts("select norm");
+	if (FD_ISSET(sock, &readset))
+		if (recv(sock, buf, message->length, 0) <= 0)
+		{
+			puts("Пришло недостаточно данных"); //debug
+			return NULL;
+		}
+//	puts("получили из сокета все что нужно");
+	// Заполнение сообщения параметрами
 	int i = 0;
 	int mes_value_curr_size = 0;
-
 	Parameter param[MAX_PARAMS];
 	while (1)
 	{
-		{ /* Получение данных об очередном параметре */
-			recv(input,buf,4,0);
-			param[i].type = char2_to_int(buf);	
-			param[i].length = char2_to_int(&buf[2]);
-			mes_value_curr_size += sizeof(param[i].type) + sizeof(param[i].length);
-		}
-
+		// Получение данных об очередном параметре
+		param[i].type = char2_to_int(buf);
+		buf += sizeof(param[i].type);
+//		puts("1");
+		param[i].length = char2_to_int(buf);
+//		puts("2");
+		buf += sizeof(param[i].length);
+		mes_value_curr_size += sizeof(param[i].type) + sizeof(param[i].length);
+		// Если текущий параметр зашкаливает размер сообщения, то брикаем цикл
 		if (param[i].length + mes_value_curr_size > message->length)
-			break;
-		{ /* Получение значения параметра */
-			param[i].value = malloc(param[i].length + 1);
-			recv(input, param[i].value, param[i].length, 0);
-		}
+			return NULL;
+		// Получение значения параметра
+		param[i].value = malloc(param[i].length + 1);
+//		puts("4");
+		memcpy((void*)param[i].value, (void*)buf, param[i].length);
+		buf += param[i].length;
+//		puts("5");
 		if ((param[i].length + mes_value_curr_size) == message->length)
-		{
 			break;
-		}
 		i++;
 	}
-	{ /* Кладем принятые параметры в сообщение */
-		message->params = i;
-		message->parameter = calloc(i, sizeof(Parameter*));
-		int j;
-		for (j = 0; j <= i; j++ )
-		{
-			message->parameter[j] = malloc(sizeof(Parameter));
-			*message->parameter[j] = param[j];
-			message->parameter[j]->value = malloc(param[j].length + 1);
-			memcpy((void*)message->parameter[j]->value, (void*)param[j].value, message->parameter[j]->length);
-			mes_value_curr_size += param[j].length;
-		}
-	}	
+
+	free(buf_for_free);
+//	puts("очистили буфер");
+	/* Кладем принятые параметры в сообщение */
+	message->params = i;
+	message->parameter = calloc(i, sizeof(Parameter*));
+	int j;
+	for (j = 0; j <= i; j++ )
+	{
+		message->parameter[j] = malloc(sizeof(Parameter));
+		*message->parameter[j] = param[j];
+		message->parameter[j]->value = malloc(param[j].length + 1);
+		memcpy((void*)message->parameter[j]->value, (void*)param[j].value, message->parameter[j]->length);
+		mes_value_curr_size += param[j].length;
+	}
 	return message;
 }
 
-char* unparse(Message* message)
+void serialize_and_send(Message* message, int sock)
 {
 	int message_size;
 	message_size = message->length + sizeof(message->length) + sizeof(message->protocol_version) + sizeof(message->type);
@@ -94,6 +125,6 @@ char* unparse(Message* message)
 		memcpy(&str[j], message->parameter[i]->value, message->parameter[i]->length);
 		j += message->parameter[i]->length;
 	}
-	str[j] = '\0';
-	return str;
+	str[j] = '\0';	
+	send(sock, str, message_size, 0); // отсылаем получившееся сообщение
 }	

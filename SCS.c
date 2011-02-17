@@ -36,7 +36,7 @@ int main(int argc, char** argv)
 	}
 	
 	f_channel_setup(sock);
-	Message* message = parse(sock);
+	Message* message = recv_and_deserialize(sock);
 	if (message->type == channel_status && char2_to_int(message->parameter[0]->value) == 1)
 	{
 		puts("Channel 1 setup success");

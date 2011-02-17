@@ -25,6 +25,7 @@ int main(int argc, char** argv)
 	for (i = 0; i < MAX_SOCKETS; i++)
 	{ /*Ждем клиента и запускаем его в отдельный поток выполнения */
 		int client_sock = accept(listener,NULL,NULL);
+		fcntl(client_sock, F_SETFL, O_NONBLOCK); // неблокирующий сокет
 		pthread_create(&thread[i], NULL, &thread_fun, &client_sock);
 	}
 	int j;
@@ -38,21 +39,29 @@ int main(int argc, char** argv)
 
 void work_with_client(int sock)
 {
+	puts ("start work with client");
 	Channel* channel = malloc(sizeof(Channel));
 	Message* message;
 	while(1)
 	{
-		message = parse(sock);
-		if (ECMG_messhandler(channel, message, sock)) 
-		/* если в результате обработки сообщения необходимо
-		закрыть TCP соединение и завершить поток выполнения,
-		то выходим из цикла */
+		/* если в результате обработки сообщения произошла ошибка или необходимо
+		   закрыть TCP соединение и завершить поток выполнения,
+		   то выходим из цикла */
+		if (message = recv_and_deserialize(sock))
 		{
-			puts("Закрываем TCP соединение");
+			if (ECMG_messhandler(channel, message, sock)) 
+			{
+				puts("Закрываем TCP соединение");
+				free_mes(message);
+				break;
+			}
+		}
+		else
+		{
+			puts("Ошибка при получении данных от клиента");
 			free_mes(message);
 			break;
 		}
-		free_mes(message);
 	}
 	free(channel);
 }

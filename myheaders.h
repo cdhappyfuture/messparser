@@ -9,5 +9,8 @@
 #include <netinet/in.h>
 #include <string.h>
 #include <pthread.h>
+#include <unistd.h> // select + fcntl
+#include <sys/time.h> // timeout for recv
+#include <fcntl.h>
 
 #endif
