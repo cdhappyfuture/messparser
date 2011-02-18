@@ -42,8 +42,13 @@ int main(int argc, char** argv)
 		puts("Channel 1 setup success");
 		f_channel_test(sock);
 		if (message->type == channel_status && char2_to_int(message->parameter[0]->value) == 1)
+		/*{
+			f_stream_setup(sock, 7, 1);
+			f_stream_close_request(sock, 1);
+		}
+		else*/
 		{
-			puts("Channel is active");
+			puts("Channel error!! Sending channel_close");
 			f_channel_close(sock);
 		}
 	}

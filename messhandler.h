@@ -83,7 +83,9 @@ struct _Channel
 };
 typedef struct _Channel Channel;
 
+void set_stream(Channel* channel, Message* message);
 int ECMG_messhandler(Channel*, Message*, int);
 int SCS_messhandler(Channel*, Message*, int);
+void close_stream(Channel* channel, Message* message);
 
 #endif

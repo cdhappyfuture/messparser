@@ -3,11 +3,14 @@
 
 void free_mes(Message* m)
 {
-	int i;
-	for (i = 0; i < m->params; i++)
-		free(m->parameter[i]->value);
-	free(m->parameter);
-	free(m);
+	if (!m->params == 0)
+	{
+		int i;
+		for (i = 0; i < m->params; i++)
+			free(m->parameter[i]->value);
+		free(m->parameter);
+		free(m);
+	}
 }		
 uint16_t char2_to_int(char* bytes) //рабочая
 {
@@ -26,21 +29,24 @@ char* int_to_char2(uint16_t var)
 }
 Message* recv_and_deserialize(int sock)
 {
-//	puts("parse");
+	puts("parse");
 	Message* message = malloc(sizeof(Message));
 	// извлекаем из сокета шапку сообщения
 	char* buf = malloc(6);
 	fd_set readset;
 	FD_SET(sock, &readset);
 	Time tv;
-	tv.tv_sec = 6;
+	tv.tv_sec = 15;
 	tv.tv_usec = 0;
 	if (select(sock + 1, &readset, NULL, NULL, &tv) <= 0)
+	{
+		puts("Недождались прихода сообщения");
 		return NULL;
+	}
 	if (FD_ISSET(sock, &readset))
 		if (recv(sock, buf, 5, 0) <= 0)
 			return NULL;
-//	puts("получили шапку");
+	puts("получили шапку");
 	message->protocol_version = (unsigned int)*buf;
 	message->type = char2_to_int(&buf[1]);
 	message->length = char2_to_int(&buf[3]);
@@ -48,20 +54,20 @@ Message* recv_and_deserialize(int sock)
 	// извлекаем из сокета тело сообщения
 	buf = malloc(message->length + 1);
 	char* buf_for_free = buf;
-	tv.tv_sec = 5;
+	tv.tv_sec = 3;
 	tv.tv_usec = 0;
 	FD_ZERO(&readset);
 	FD_SET(sock, &readset);
 	if (select(sock + 1, &readset, NULL, NULL, &tv) <= 0)
 		return NULL;
-//	puts("select norm");
+	puts("select norm");
 	if (FD_ISSET(sock, &readset))
-		if (recv(sock, buf, message->length, 0) <= 0)
+		if (recv(sock, buf, message->length, 0) < 0)
 		{
 			puts("Пришло недостаточно данных"); //debug
 			return NULL;
 		}
-//	puts("получили из сокета все что нужно");
+	puts("получили из сокета все что нужно");
 	// Заполнение сообщения параметрами
 	int i = 0;
 	int mes_value_curr_size = 0;
@@ -71,9 +77,9 @@ Message* recv_and_deserialize(int sock)
 		// Получение данных об очередном параметре
 		param[i].type = char2_to_int(buf);
 		buf += sizeof(param[i].type);
-//		puts("1");
+		puts("1");
 		param[i].length = char2_to_int(buf);
-//		puts("2");
+		puts("2");
 		buf += sizeof(param[i].length);
 		mes_value_curr_size += sizeof(param[i].type) + sizeof(param[i].length);
 		// Если текущий параметр зашкаливает размер сообщения, то брикаем цикл
@@ -81,10 +87,10 @@ Message* recv_and_deserialize(int sock)
 			return NULL;
 		// Получение значения параметра
 		param[i].value = malloc(param[i].length + 1);
-//		puts("4");
+		puts("4");
 		memcpy((void*)param[i].value, (void*)buf, param[i].length);
 		buf += param[i].length;
-//		puts("5");
+		puts("5");
 		if ((param[i].length + mes_value_curr_size) == message->length)
 			break;
 		i++;

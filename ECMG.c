@@ -59,7 +59,7 @@ void work_with_client(int sock)
 		else
 		{
 			puts("Ошибка при получении данных от клиента");
-			free_mes(message);
+		//	free_mes(message);
 			break;
 		}
 	}

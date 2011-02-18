@@ -73,9 +73,10 @@ int ECMG_messhandler(Channel* channel, Message* message, int sock)
 				f_channel_error(invalid_message, sock);
 			}
 		}
-	}/*
+	}
 	else
 	{ // Если сообщение для stream 
+		uint16_t cur_stream = char2_to_int(message->parameter[1]->value);
 		if (channel->active)
 		{
 			if (channel->has_at_least_one_stream)
@@ -84,10 +85,14 @@ int ECMG_messhandler(Channel* channel, Message* message, int sock)
 				{
 					case stream_setup:
 						{	
-							if ( ! there_is_stream_with_income_id(channel,message))
+							if ( ! there_is_stream_with_income_id(channel, cur_stream))
+							{
+								puts("Income message: stream_setup. Setuping stream");
 								set_stream(channel,message);
+								printf("Stream %i setup success", cur_stream);
+							}
 							else
-								f_stream_error(sock, unrecoverable_error);
+								f_stream_error(sock, cur_stream, unrecoverable_error);
 							break;
 						}
 					case stream_test:
@@ -95,14 +100,14 @@ int ECMG_messhandler(Channel* channel, Message* message, int sock)
 							if ( 1  )
 								f_stream_status(sock, 1,1);
 							else
-								f_stream_error(unrecoverable_error, sock);
+								f_stream_error(sock, cur_stream, unrecoverable_error);
 							break;
 						}
 					case stream_close_request:
 						{
 							if (there_is_stream_with_income_id(channel,message))
 							{
-								f_stream_close_response(message, sock);
+								f_stream_close_response(sock, cur_stream);
 								close_stream(channel, message);
 							}
 							break;
@@ -115,12 +120,12 @@ int ECMG_messhandler(Channel* channel, Message* message, int sock)
 					case stream_status:
 						{
 							if ( 0  )
-								f_stream_error(unrecoverable_error, sock);
+								f_stream_error(sock, cur_stream, unrecoverable_error);
 							break;
 						}
 					case CW_provision:
 						{
-							f_ECM_response(message, sock);
+							f_ECM_response(sock, cur_stream);
 							break;
 						}
 				}
@@ -131,23 +136,23 @@ int ECMG_messhandler(Channel* channel, Message* message, int sock)
 				{
 					set_stream(channel,message);
 					if ( 1  )
-						f_stream_status(channel, sock);
+						f_stream_status(sock, 1, 1);
 					else
-						f_stream_error(unrecoverable_error, sock);
+						f_stream_error(sock, cur_stream, unrecoverable_error);
 				}
 				else
 				{
-					f_stream_error(unrecoverable_error, sock); 
+					f_stream_error(sock, cur_stream, unrecoverable_error);
 				}	
 			}
 		}
 		else
 		{
-			f_stream_error(unrecoverable_error, sock);
+			f_stream_error(sock, cur_stream, unrecoverable_error);
 		}
 
 		return 0;
-	} */
+	} 
 	return 0;
 }
 int there_is_stream_with_income_id(Channel* channel, Message* message)
@@ -158,7 +163,7 @@ int there_is_stream_with_income_id(Channel* channel, Message* message)
 
 void set_stream(Channel* channel, Message* message)
 {
-	channel->stream[channel->streams + 1] = ( char2_to_int(message->parameter[1]->value) );
+	channel->stream[++channel->streams] = ( char2_to_int(message->parameter[1]->value) );
 	channel->has_at_least_one_stream = 1;
 }
 
@@ -167,5 +172,6 @@ void close_stream(Channel* channel, Message* message)
 	int i;
 	for (i = 0; i < channel->streams; i++)
 		if (channel->stream[i] == char2_to_int(message->parameter[1]->value) )
-			channel->stream[i]; // закрываем	
+			channel->stream[i] = 0;
+//			channel->has_at_least_one_stream = 0;
 }
