@@ -21,6 +21,7 @@ int ECMG_messhandler(Channel* channel, Message* message, int sock)
 			{
 				case channel_test:
 					{
+                        puts("Income message: channel_test. Sending channel_status...");
 						//if (//all rigth )		
 						f_channel_status(sock);
 						// else f_channel_error(sock, unrecoverable_error);
@@ -57,7 +58,7 @@ int ECMG_messhandler(Channel* channel, Message* message, int sock)
 				channel->active = 1;
 				if (channel->active == 1)
 				{
-					printf("Channel %i setup success", channel->ECM_channel_id);
+					printf("Channel %i setup success\n", channel->ECM_channel_id);
 					puts("Sending channel_status...");
 					f_channel_status(sock);
 				}
@@ -89,24 +90,33 @@ int ECMG_messhandler(Channel* channel, Message* message, int sock)
 							{
 								puts("Income message: stream_setup. Setuping stream");
 								set_stream(channel,message);
-								printf("Stream %i setup success", cur_stream);
+								printf("Stream %i setup success. Sending stream_status...", cur_stream);
+                                f_stream_status(sock, 7, 1);
 							}
 							else
+                            {
+                                puts("Error: There is stream with inclome id. Sending stream_error...");
 								f_stream_error(sock, cur_stream, unrecoverable_error);
+                            }
 							break;
 						}
 					case stream_test:
 						{
 							if ( 1  )
+                            {
+                                puts("Income message: stream_test. Sending stream_status");
 								f_stream_status(sock, 1,1);
+                            }
 							else
 								f_stream_error(sock, cur_stream, unrecoverable_error);
 							break;
 						}
 					case stream_close_request:
 						{
+                            puts("Income message: stream_close_request.");
 							if (there_is_stream_with_income_id(channel,message))
 							{
+                                puts("Sending stream close_response...");
 								f_stream_close_response(sock, cur_stream);
 								close_stream(channel, message);
 							}
@@ -134,36 +144,46 @@ int ECMG_messhandler(Channel* channel, Message* message, int sock)
 			{
 				if (message->type == stream_setup)
 				{
+					puts("Income message stream setup");
 					set_stream(channel,message);
-					if ( 1  )
-						f_stream_status(sock, 1, 1);
+					puts("Stream setup success");
+					if ( 1  ) // если стрим успешно установлен, заглушка
+					{
+						puts("Sending stream_status...");
+						f_stream_status(sock, char2_to_int(message->parameter[1]->value),
+                                char2_to_int(message->parameter[2]->value));
+					}
 					else
+					{
+						puts("Error occured while setuping stream. Sending stream_error");	
 						f_stream_error(sock, cur_stream, unrecoverable_error);
+					}
 				}
 				else
 				{
 					f_stream_error(sock, cur_stream, unrecoverable_error);
-				}	
+				}
+				return 0;
 			}
 		}
 		else
 		{
 			f_stream_error(sock, cur_stream, unrecoverable_error);
 		}
-
 		return 0;
 	} 
 	return 0;
 }
 int there_is_stream_with_income_id(Channel* channel, Message* message)
 {
-	return 0;
-	//return 1;
+	return 1;
+	//return 0;
 }
 
 void set_stream(Channel* channel, Message* message)
 {
 	channel->stream[++channel->streams] = ( char2_to_int(message->parameter[1]->value) );
+	printf("Setting stream %i\n",channel->stream[channel->streams]);
 	channel->has_at_least_one_stream = 1;
 }
 

@@ -12,5 +12,5 @@
 #include <unistd.h> // select + fcntl
 #include <sys/time.h> // timeout for recv
 #include <fcntl.h>
-
+#include <sys/ioctl.h>
 #endif

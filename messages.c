@@ -9,7 +9,7 @@ void alloc_params(Message* message)
 }	
 
 void setup_and_send(int sock, Message* message)
-{	
+{
 	message->protocol_version = SUPPORTED_PROTOCOL_VERSION;
 	message->type = message->type;
 	set_param(0, message, ECM_channel_id, STD_VALUE_LEN, 0x0001);
@@ -17,7 +17,6 @@ void setup_and_send(int sock, Message* message)
 	for (i = 0; i < message->params; i++ )
 		message->length += sizeof(message->parameter[i]->type) + sizeof(message->parameter[i]->length) +	
 			message->parameter[i]->length;
-	message->length = message->length;
 	serialize_and_send(message, sock);
 }
 void set_param(int i, Message* message, uint16_t type, uint16_t len, uint16_t value)
@@ -80,7 +79,7 @@ void f_stream_setup(int sock, uint16_t stream_id, uint16_t ecm_id)
 {
 	Message* message = malloc(sizeof(Message));
 	message->type = stream_setup;
-	message->params = 4;
+	message->params = 3;
 	alloc_params(message);
 	set_param(1, message, ECM_stream_id, STD_VALUE_LEN, stream_id);
 	set_param(2, message, ECM_id, STD_VALUE_LEN, ecm_id);
@@ -102,7 +101,7 @@ void f_stream_status(int sock, uint16_t stream_id, uint16_t ecm_id)
 {
 	Message* message = malloc(sizeof(Message));
 	message->type = stream_status;
-	message->params = 4;
+	message->params = 3;
 	alloc_params(message);
 	set_param(1, message, ECM_stream_id, STD_VALUE_LEN, stream_id);
 	set_param(2, message, ECM_id, STD_VALUE_LEN, ecm_id);

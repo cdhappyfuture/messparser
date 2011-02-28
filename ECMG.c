@@ -42,6 +42,7 @@ void work_with_client(int sock)
 	puts ("start work with client");
 	Channel* channel = malloc(sizeof(Channel));
 	Message* message;
+	int i = 0;
 	while(1)
 	{
 		/* если в результате обработки сообщения произошла ошибка или необходимо
@@ -52,22 +53,45 @@ void work_with_client(int sock)
 			if (ECMG_messhandler(channel, message, sock)) 
 			{
 				puts("Закрываем TCP соединение");
-				free_mes(message);
+				//free_mes(message);
 				break;
 			}
 		}
 		else
 		{
-			puts("Ошибка при получении данных от клиента");
-		//	free_mes(message);
-			break;
-		}
-	}
-	free(channel);
+            puts("Ошибка при получении данных от клиента. Посылаем channel_test...");
+            f_channel_test(sock);
+            if(message = recv_and_deserialize(sock))
+            {
+                if (message->type == channel_status)
+                {
+                    if (message->parameter[0] == 1)// проверяем все ли в порядке
+                    {
+                        printf("Закончили обработку %iого сообщения\n",++i);
+                        continue;
+                    }
+                }
+                else
+                {
+                    //	free_mes(message);
+                    puts("Ошибка channel, закрываем TCP соедниение");
+                    break;
+                }
+            }
+            else
+            {
+                puts("Client is dead : )");
+                puts("Ошибка channel, закрываем TCP соедниение");
+                break;
+            }
+        }
+        //printf("Обработали %iе сообщение\n",++i);
+    }
+    free(channel);
 }
 
 void* thread_fun(void* arg)
 {
-	int sock = *(int*) arg;
-	work_with_client(sock);
+    int sock = *(int*) arg;
+    work_with_client(sock);
 }
